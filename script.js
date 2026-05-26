@@ -10,14 +10,27 @@ function mostrarAlerta(texto, tipo) {
     setTimeout(() => alerta.className = 'alerta oculto', 3000);
 }
 
-// Renderizar modificado por Compañero 2 (Incluye botón Eliminar)
+// Renderizar final modificado por Compañero 3 (Incluye Editar y Eliminar)
 function renderizarTareaEnDOM(tarea) {
     let li = document.createElement('li');
     li.innerHTML = `<span>${tarea.title}</span>`;
     
     let contenedorBotones = document.createElement('div');
 
-    // --- CÓDIGO NUEVO COMPAÑERO 2 ---
+    // --- CÓDIGO NUEVO COMPAÑERO 3 ---
+    let btnActualizar = document.createElement('button');
+    btnActualizar.innerText = 'Editar';
+    btnActualizar.style.backgroundColor = '#ffc107';
+    btnActualizar.style.color = '#000';
+    btnActualizar.style.border = 'none';
+    btnActualizar.style.padding = '5px 10px';
+    btnActualizar.style.borderRadius = '4px';
+    btnActualizar.style.cursor = 'pointer';
+    btnActualizar.onclick = () => actualizarTarea(tarea.id, li);
+    contenedorBotones.appendChild(btnActualizar);
+    // ---------------------------------
+
+    // --- CÓDIGO MANTENIDO DEL COMPAÑERO 2 ---
     let btnEliminar = document.createElement('button');
     btnEliminar.innerText = 'Eliminar';
     btnEliminar.style.backgroundColor = '#dc3545';
@@ -29,7 +42,7 @@ function renderizarTareaEnDOM(tarea) {
     btnEliminar.style.cursor = 'pointer';
     btnEliminar.onclick = () => eliminarTarea(tarea.id, li);
     contenedorBotones.appendChild(btnEliminar);
-    // ---------------------------------
+    // ----------------------------------------
 
     li.appendChild(contenedorBotones);
     lista.appendChild(li);
@@ -78,7 +91,7 @@ function crearTarea(evento) {
 formulario.onsubmit = crearTarea;
 obtenerTareas();
 
-// --- FUNCIÓN NUEVA COMPAÑERO 2 ---
+// --- FUNCIÓN DEL COMPAÑERO 2 ---
 function eliminarTarea(id, elementoHTML) {
     let confirmar = confirm("¿Estás seguro de que deseas eliminar esta tarea?");
     if (!confirmar) return;
@@ -89,7 +102,31 @@ function eliminarTarea(id, elementoHTML) {
     .then(res => {
         if (!res.ok) throw new Error();
         elementoHTML.remove(); 
-        mostrarAlerta('Tarea eliminada correctamente', 'exito');
+        mostrarAlerta('Tarea deleted correctamente', 'exito');
     })
     .catch(() => mostrarAlerta('Hubo un inconveniente al intentar eliminar la tarea', 'error'));
+}
+
+// --- FUNCIÓN NUEVA COMPAÑERO 3 ---
+function actualizarTarea(id, elementoHTML) {
+    let nuevoTitulo = prompt("Modificar información de la tarea:", elementoHTML.querySelector('span').innerText);
+    if (!nuevoTitulo || nuevoTitulo.trim() === '') {
+        mostrarAlerta('Operación cancelada o campo vacío', 'error');
+        return;
+    }
+
+    fetch('https://jsonplaceholder.typicode.com/todos/' + id, {
+        method: 'PATCH',
+        body: JSON.stringify({ title: nuevoTitulo }),
+        headers: { 'Content-type': 'application/json' }
+    })
+    .then(res => {
+        if (!res.ok) throw new Error();
+        return res.json();
+    })
+    .then(tareaActualizada => {
+        elementoHTML.querySelector('span').innerText = nuevoTitulo; 
+        mostrarAlerta('Tarea actualizada con éxito', 'exito');
+    })
+    .catch(() => mostrarAlerta('Ocurrió un error al intentar actualizar', 'error'));
 }
