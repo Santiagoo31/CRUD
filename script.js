@@ -1,49 +1,56 @@
-// Filtramos por userId=1 para simular el contexto del usuario identificado
 const url = 'https://jsonplaceholder.typicode.com/todos?userId=1';
 const input = document.getElementById('tareaInput');
 const formulario = document.getElementById('formularioTarea');
 const lista = document.getElementById('listaTareas');
 const alerta = document.getElementById('mensajeAlerta');
 
-// Función reutilizable para mostrar mensajes al usuario (RNF-03)
 function mostrarAlerta(texto, tipo) {
     alerta.innerText = texto;
-    alerta.className = `alerta ${tipo}`; // Cambia las clases CSS dinámicamente
-    setTimeout(() => alerta.className = 'alerta oculto', 3000); // Se oculta a los 3 segundos
+    alerta.className = `alerta ${tipo}`;
+    setTimeout(() => alerta.className = 'alerta oculto', 3000);
 }
 
-// RF-01: Pintar tareas en el DOM
+// Renderizar modificado por Compañero 2 (Incluye botón Eliminar)
 function renderizarTareaEnDOM(tarea) {
     let li = document.createElement('li');
     li.innerHTML = `<span>${tarea.title}</span>`;
     
     let contenedorBotones = document.createElement('div');
-    // Los botones de actualizar y eliminar se quedan vacíos por ahora para tus compañeros
-    
+
+    // --- CÓDIGO NUEVO COMPAÑERO 2 ---
+    let btnEliminar = document.createElement('button');
+    btnEliminar.innerText = 'Eliminar';
+    btnEliminar.style.backgroundColor = '#dc3545';
+    btnEliminar.style.marginLeft = '5px';
+    btnEliminar.style.color = 'white';
+    btnEliminar.style.border = 'none';
+    btnEliminar.style.padding = '5px 10px';
+    btnEliminar.style.borderRadius = '4px';
+    btnEliminar.style.cursor = 'pointer';
+    btnEliminar.onclick = () => eliminarTarea(tarea.id, li);
+    contenedorBotones.appendChild(btnEliminar);
+    // ---------------------------------
+
     li.appendChild(contenedorBotones);
     lista.appendChild(li);
 }
 
-// RF-01: Obtener tareas del usuario de la API
 function obtenerTareas() {
     fetch(url)
         .then(res => {
-            if (!res.ok) throw new Error(); // Si el servidor falla, salta al catch
+            if (!res.ok) throw new Error();
             return res.json();
         })
         .then(datos => {
             lista.innerHTML = '';
-            // Mostramos solo las primeras 5 tareas de este usuario
             datos.slice(0, 5).forEach(tarea => renderizarTareaEnDOM(tarea));
         })
         .catch(() => mostrarAlerta('Error de red: No se pudieron cargar las tareas', 'error'));
 }
 
-// RF-02: Crear Tarea con validaciones
 function crearTarea(evento) {
     evento.preventDefault();
     
-    // Validación de campos vacíos (RF-02 / RNF-02)
     if (input.value.trim() === '') {
         mostrarAlerta('El campo de texto está vacío. Por favor escribe una tarea.', 'error');
         return;
@@ -70,3 +77,19 @@ function crearTarea(evento) {
 
 formulario.onsubmit = crearTarea;
 obtenerTareas();
+
+// --- FUNCIÓN NUEVA COMPAÑERO 2 ---
+function eliminarTarea(id, elementoHTML) {
+    let confirmar = confirm("¿Estás seguro de que deseas eliminar esta tarea?");
+    if (!confirmar) return;
+
+    fetch('https://jsonplaceholder.typicode.com/todos/' + id, {
+        method: 'DELETE'
+    })
+    .then(res => {
+        if (!res.ok) throw new Error();
+        elementoHTML.remove(); 
+        mostrarAlerta('Tarea eliminada correctamente', 'exito');
+    })
+    .catch(() => mostrarAlerta('Hubo un inconveniente al intentar eliminar la tarea', 'error'));
+}
